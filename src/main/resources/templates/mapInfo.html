@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width" />
+    <title>gdmapinfo</title>
+    <style type="text/css">
+      body,html,#iCenter{
+        height: 100%;
+        margin: 0px;
+      }
+    </style>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.1&amp;key=62660d89cc409578445996ee34d94045"></script>
+</head>
+<body>
+<div id="iCenter" tabindex="0"></div>
+<div id="log"></div>
+<script type="text/javascript">
+       mapObj = new AMap.Map('iCenter');
+       mapObj.plugin('AMap.Geolocation', function () {
+        geolocation = new AMap.Geolocation({
+        enableHighAccuracy: true,//是否使用高精度定位，默认:true
+        timeout: 50000,          //超过10秒后停止定位，默认：无穷大
+        maximumAge: 0,           //定位结果缓存0毫秒，默认：0
+        convert: true,           //自动偏移坐标，偏移后的坐标为高德坐标，默认：true
+        showButton: true,        //显示定位按钮，默认：true
+        buttonPosition: 'LB',    //定位按钮停靠位置，默认：'LB'，左下角
+        buttonOffset: new AMap.Pixel(10, 20),//定位按钮与设置的停靠位置的偏移量，默认：Pixel(10, 20)
+        showMarker: true,        //定位成功后在定位到的位置显示点标记，默认：true
+        showCircle: true,        //定位成功后用圆圈表示定位精度范围，默认：true
+        panToLocation: true,     //定位成功后将定位到的位置作为地图中心点，默认：true
+        zoomToAccuracy:true      //定位成功后调整地图视野范围使定位位置及精度范围视野内可见，默认：false
+        });
+        mapObj.addControl(geolocation);
+        geolocation.getCurrentPosition(function(status,result){
+         console.log(status);
+         console.log(result);
+         });
+        AMap.event.addListener(geolocation, 'complete', onComplete);//返回定位信息
+        AMap.event.addListener(geolocation, 'error', onError);      //返回定位出错信息
+    });
+
+    function onComplete(){
+     console.log(arguments);
+     var result = arguments[0];
+     var postDataStr ="addreLike:'"+result.formattedAddress+"',street:'"+result.addressComponent.street+"',streetNumber:'"+result.addressComponent.streetNumber+"',township:'"+result.addressComponent.township+"',lat:'"+result.position.lat+"',lng:'"+result.position.lng+"'";
+     console.log(postDataStr);
+     var addreLike =result.formattedAddress;
+     var street =result.addressComponent.street;
+     var streetNumber =result.addressComponent.streetNumber;
+     var township =result.addressComponent.township;
+     var lat =result.position.lat;
+     var  lng =result.position.lng;
+     var datap ={"addreLike":addreLike,"street":street,"streetNumber":streetNumber,"township":township,"lat":lat,"lng":lng};
+     $.ajax({
+            type: "post",
+            url: "/fixedapp-1.0-SNAPSHOT/postLocation",    //向后端请求数据的url
+            data: datap,
+            dataType: 'json',
+            contentType: 'application/x-www-form-urlencoded',
+            success: function (data) {
+             console.log(data);
+            }
+        });
+    }
+
+    function onError(data){
+     console.log(JSON.stringify(data));
+     console.log(arguments);
+     geolocation.getCityInfo(function(status,result){
+         var city =result.city;
+         var bound0 =result.bounds[0];
+         var bound1 =result.bounds[1];
+         var bound2 =result.bounds[2];
+         var bound3 =result.bounds[3];
+         var center0 =result.center[0];
+         var center1 =result.center[1];
+         var boundsP =bound0+"|"+bound1+"|"+bound2+"|"+bound3;
+         var centerP =center0+"|"+center1;
+         var dataP={"addreLike":city,"street":boundsP,"streetNumber":centerP,"township":0,"lat":0,"lng":0};
+         $.ajax({
+            type: "post",
+            url: "/fixedapp-1.0-SNAPSHOT/postLocation",    //向后端请求数据的url
+            data: dataP,
+            dataType: 'json',
+            contentType: 'application/x-www-form-urlencoded',
+            success: function (data) {
+             console.log(data);
+            }
+        });
+
+         });
+    }
+    </script>
+</body>
+</html>

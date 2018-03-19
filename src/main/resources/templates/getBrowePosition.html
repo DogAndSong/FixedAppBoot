@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"/>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <title>get_you_info </title>
+    <style type="text/css">
+   </style>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script>
+        $(function(){
+        navigator.geolocation.getCurrentPosition(postServerDate); //定位
+        });
+        function postServerDate(position){
+        var currentLat = position.coords.latitude;
+        var currentLon = position.coords.longitude;
+        var dataParams ={'latitudes':currentLat,'longitude':currentLon}
+         $.post({
+         url:"/postLocation",
+         data:dataParams,
+         success:function(result){
+            $("#div1").html(result);
+          }
+         });
+       }
+        </script>
+</head>
+<body>
+<div id="container"></div>
+</body>
+</html>
